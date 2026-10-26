@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Ball Z - DBZ Power Battle</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes Google (Bebas Neue & Montserrat) -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #0f0a1c;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .font-dbz {
+            font-family: 'Bebas Neue', cursive;
+            letter-spacing: 1.5px;
+        }
+
+        /* Fundo de Energia DBZ */
+        .dbz-bg {
+            background: radial-gradient(circle at center, #2b1055 0%, #7597de 0%, #0f0a1c 80%);
+            background-size: cover;
+            position: relative;
+        }
+
+        /* Aura de Energia */
+        .ki-aura {
+            box-shadow: 0 0 15px #f59e0b, inset 0 0 15px #f59e0b;
+            animation: pulse-aura 1.5s infinite alternate;
+        }
+
+        @keyframes pulse-aura {
+            0% { box-shadow: 0 0 10px #f59e0b, 0 0 20px #ef4444; }
+            100% { box-shadow: 0 0 25px #fbbf24, 0 0 40px #f97316; }
+        }
+
+        /* Efeitos das Cartas */
+        .dbz-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .dbz-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.5);
+        }
+
+        .dbz-card.selected {
+            transform: translateY(-15px) scale(1.05);
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 20px #3b82f6;
+        }
+
+        /* Cartas de Batalha em Ataque */
+        .card-attacking {
+            animation: attack-shake 0.5s ease-in-out;
+        }
+
+        @keyframes attack-shake {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.1) translateY(-20px) rotate(-3deg); }
+            40% { transform: scale(1.2) translateY(30px) rotate(5deg); }
+            60% { transform: scale(1) translateY(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* Esferas do Dragão */
+        .dragon-ball {
+            background: radial-gradient(circle at 30% 30%, #fef08a, #f97316, #b45309);
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.8);
+            position: relative;
+        }
+
+        .dragon-ball::after {
+            content: '★';
+            color: #b91c1c;
+            font-size: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        /* Shenlong Modal Animation */
+        .shenlong-bg {
+            background: rgba(5, 46, 22, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .lightning-effect {
+            animation: lightning 0.2s infinite alternate;
+        }
+
+        @keyframes lightning {
+            0% { opacity: 0.2; }
+            100% { opacity: 0.9; }
+        }
+
+        /* Tooltip Personalizado */
+        .card-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .dbz-card:hover .card-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="dbz-bg min-h-screen flex flex-col justify-between select-none">
+
+    <!-- Áudio Synth Engine Controls (Sons do jogo) -->
+    <div class="fixed top-3 right-3 z-50 flex items-center gap-2 bg-gray-900/80 p-2 rounded-full border border-amber-500/50 backdrop-blur">
+        <button id="btn-sound" class="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-400 text-gray-950 flex items-center justify-center font-bold transition">
+            <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+        </button>
+    </div>
+
+    <!-- TELA INICIAL (MENU) -->
+    <div id="screen-menu" class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-gray-950/90 p-4">
+        <div class="text-center max-w-xl w-full">
+            <!-- Logo DBZ Power Battle -->
+            <div class="relative inline-block mb-6">
+                <h1 class="font-dbz text-6xl md:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-500 to-red-600 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] tracking-wider">
+                    DRAGON BALL Z
+                </h1>
+                <div class="font-dbz text-2xl md:text-3xl text-cyan-400 tracking-widest -mt-2 drop-shadow">
+                    POWER BATTLE CARDS
+                </div>
+            </div>
+
+            <!-- Formulário de Opções -->
+            <div class="bg-gray-900/90 border-2 border-amber-500/50 rounded-2xl p-6 shadow-2xl backdrop-blur mb-6">
+                <h2 class="text-xl font-bold text-amber-400 mb-4 uppercase tracking-wider">Configuração da Partida</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Dificuldade da IA:</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="setDifficulty('easy')" id="diff-easy" class="diff-btn py-2 px-3 rounded-lg border border-emerald-500 bg-emerald-950/50 text-emerald-400 font-bold hover:bg-emerald-800/50 transition">Fácil</button>
+                        <button onclick="setDifficulty('medium')" id="diff-medium" class="diff-btn py-2 px-3 rounded-lg border border-amber-500 bg-amber-500 text-gray-950 font-bold hover:bg-amber-600 transition">Médio</button>
+                        <button onclick="setDifficulty('hard')" id="diff-hard" class="diff-btn py-2 px-3 rounded-lg border border-red-500 bg-red-950/50 text-red-400 font-bold hover:bg-red-800/50 transition">Difícil</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-gray-950 font-black text-2xl rounded-xl shadow-lg transform hover:scale-105 transition font-dbz tracking-widest">
+                        <i class="fa-solid fa-play mr-2"></i> INICIAR BATALHA
+                    </button>
+                    
+                    <button onclick="toggleModal('modal-rules')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-amber-300 rounded-lg border border-gray-700 font-semibold transition text-sm">
+                        <i class="fa-solid fa-book-open mr-2"></i> Como Jogar / Regras
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-xs text-gray-500">
+                Inspirado na franquia Dragon Ball Z. Criado para fãs de DBZ.
+            </div>
+        </div>
+    </div>
+
+    <!-- ARENA DE BATALHA -->
+    <div id="screen-game" class="hidden flex-1 flex flex-col justify-between p-2 md:p-4 max-w-7xl mx-auto w-full relative">
+        
+        <!-- PAINEL OPONENTE (IA) -->
+        <div class="bg-gray-900/80 border border-red-900/50 rounded-xl p-3 shadow-lg backdrop-blur">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <!-- Info do Oponente -->
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center font-bold text-red-400 text-xl shadow">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-red-400">IA (Oponente)</span>
+                            <span id="ai-diff-badge" class="text-xs px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-800">Médio</span>
+                        </div>
+                        <div class="text-xs text-gray-400">Cartas no Deck: <span id="ai-deck-count" class="text-amber-400 font-bold">15</span></div>
+                    </div>
+                </div>
+
+                <!-- Status de Batalha IA (HP & Ki) -->
+                <div class="flex-1 max-w-md mx-2">
+                    <!-- HP Bar -->
+                    <div class="mb-1">
+                        <div class="flex justify-between text-xs font-bold mb-0.5">
+                            <span class="text-red-400"><i class="fa-solid fa-heart mr-1"></i> HP IA</span>
+                            <span id="ai-hp-text" class="text-gray-200">100 / 100</span>
+                        </div>
+                        <div class="w-full h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                            <div id="ai-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-emerald-500 transition-all duration-500 w-full"></div>
+                        </div>
+                    </div>
+                    <!-- Ki Bar -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-0.5">
+                            <span class="text-cyan-400"><i class="fa-solid fa-bolt mr-1"></i> KI IA</span>
+                            <span id="ai-ki-text" class="text-gray-200">3 / 10</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                            <div id="ai-ki-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Esferas do Dragão da IA -->
+                <div class="flex items-center gap-1 bg-gray-950/60 p-1.5 rounded-lg border border-gray-800">
+                    <span class="text-xs text-amber-500 font-bold mr-1 hidden sm:inline">Esferas:</span>
+                    <div id="ai-dragon-balls" class="flex gap-1">
+                        <!-- Bolas geradas via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mão Oculta do Oponente (Costas das cartas) -->
+            <div id="ai-hand" class="flex justify-center -space-x-4 overflow-hidden py-1 min-h-[65px]">
+                <!-- Cartas viradas para baixo geradas dinamicamente -->
+            </div>
+        </div>
+
+        <!-- ZONA DE BATALHA (CAMPO CENTRAL) -->
+        <div class="my-3 flex-1 flex flex-col justify-center items-center relative min-h-[260px]">
+            <!-- Indicador do Turno -->
+            <div id="turn-banner" class="absolute -top-3 z-10 px-6 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-black text-xs uppercase tracking-widest shadow-lg">
+                Seu Turno
+            </div>
+
+            <!-- Grade do Campo de Batalha -->
+            <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-gray-900/40 rounded-2xl border border-amber-500/20 backdrop-blur-md">
+                
+                <!-- Slot Batalha IA -->
+                <div class="flex flex-col items-center justify-center p-3 rounded-xl border border-red-900/30 bg-red-950/10 min-h-[170px] relative">
+                    <span class="text-xs text-red-500/60 font-bold mb-2 uppercase tracking-wider">Ataque / Defesa Oponente</span>
+                    <div id="ai-battle-zone" class="w-full flex justify-center items-center min-h-[140px]">
+                        <div class="text-gray-600 text-xs italic">Nenhuma carta em campo</div>
+                    </div>
+                </div>
+
+                <!-- Slot Batalha Jogador -->
+                <div class="flex flex-col items-center justify-center p-3 rounded-xl border border-blue-900/30 bg-blue-950/10 min-h-[170px] relative">
+                    <span class="text-xs text-blue-500/60 font-bold mb-2 uppercase tracking-wider">Sua Carta de Combate</span>
+                    <div id="player-battle-zone" class="w-full flex justify-center items-center min-h-[140px]">
+                        <div class="text-gray-600 text-xs italic">Selecione uma carta da mão para jogar</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Botões de Ação do Combate -->
+            <div class="mt-3 flex gap-3 z-10">
+                <button id="btn-attack" onclick="executeAttack()" disabled class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white font-black uppercase text-sm shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition transform active:scale-95">
+                    <i class="fa-solid fa-burst mr-1"></i> Atacar
+                </button>
+                <button id="btn-end-turn" onclick="endTurn()" class="px-6 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-amber-500/40 text-amber-400 font-bold uppercase text-sm shadow-lg transition transform active:scale-95">
+                    Passar Turno <i class="fa-solid fa-forward ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- PAINEL JOGADOR -->
+        <div class="bg-gray-900/90 border border-amber-500/40 rounded-xl p-3 shadow-2xl backdrop-blur relative">
+            
+            <!-- Esferas + Invocação Shenlong -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-gray-800">
+                <!-- Status Jogador (HP & Ki) -->
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center font-bold text-amber-400 text-xl shadow ki-aura">
+                        <i class="fa-solid fa-user-ninja"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-lg text-amber-400">Goku (Você)</div>
+                        <div class="text-xs text-gray-400">Deck restante: <span id="player-deck-count" class="text-amber-400 font-bold">15</span></div>
+                    </div>
+                </div>
+
+                <!-- Barras de Status -->
+                <div class="flex-1 max-w-md mx-2">
+                    <!-- HP -->
+                    <div class="mb-1">
+                        <div class="flex justify-between text-xs font-bold mb-0.5">
+                            <span class="text-emerald-400"><i class="fa-solid fa-heart mr-1"></i> Seu HP</span>
+                            <span id="player-hp-text" class="text-gray-200">100 / 100</span>
+                        </div>
+                        <div class="w-full h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                            <div id="player-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-amber-500 to-emerald-500 transition-all duration-500 w-full"></div>
+                        </div>
+                    </div>
+                    <!-- Ki -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-0.5">
+                            <span class="text-cyan-400"><i class="fa-solid fa-bolt mr-1"></i> Seu KI</span>
+                            <span id="player-ki-text" class="text-gray-200">3 / 10</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                            <div id="player-ki-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel Esferas do Dragão Jogador -->
+                <div class="flex items-center gap-2 bg-gray-950/80 p-2 rounded-xl border border-amber-500/40">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] text-amber-400 font-bold uppercase">Esferas do Dragão</span>
+                        <span id="db-count-text" class="text-xs font-extrabold text-white">0 / 7</span>
+                    </div>
+                    <div id="player-dragon-balls" class="flex gap-1">
+                        <!-- Esferas Ativas JS -->
+                    </div>
+                    <button id="btn-shenlong" onclick="openShenlongModal()" disabled class="ml-2 px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-gray-950 text-xs font-black rounded-lg uppercase tracking-wider opacity-40 cursor-not-allowed transition transform hover:scale-105 shadow">
+                        Invoque <i class="fa-solid fa-dragon ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARTAS NA MÃO DO JOGADOR -->
+            <div class="relative">
+                <div class="text-xs font-bold text-gray-400 mb-1 flex justify-between items-center">
+                    <span>Sua Mão (Clique para selecionar / colocar no campo)</span>
+                    <span class="text-amber-400 text-[11px]"><i class="fa-solid fa-info-circle mr-1"></i>Custo em Ki no canto superior esquerdo</span>
+                </div>
+                <div id="player-hand" class="flex justify-center gap-2 md:gap-3 overflow-x-auto py-2 min-h-[150px] px-2">
+                    <!-- Cartas do Jogador geradas via JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL SHENLONG (DESEJOS) -->
+    <div id="modal-shenlong" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 shenlong-bg">
+        <div class="absolute inset-0 bg-black/60 lightning-effect pointer-events-none"></div>
+        
+        <div class="relative z-10 max-w-2xl w-full bg-gray-950 border-2 border-emerald-500 rounded-2xl p-6 shadow-[0_0_50px_rgba(16,185,129,0.4)] text-center">
+            <div class="mb-4">
+                <i class="fa-solid fa-dragon text-6xl text-emerald-400 animate-bounce"></i>
+                <h2 class="font-dbz text-5xl text-emerald-400 tracking-wider mt-2">SHENLONG FOI INVOCADO!</h2>
+                <p class="text-gray-300 text-sm mt-1">"Qual é o seu desejo? Escolha sabiamente uma benção para esta batalha!"</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                <button onclick="grantWish('heal')" class="p-4 rounded-xl bg-gray-900 border border-emerald-500/50 hover:border-emerald-400 hover:bg-emerald-950/40 transition flex items-center gap-3 text-left">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl font-bold">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-emerald-300">Vida Total</div>
+                        <div class="text-xs text-gray-400">Restaura 100% dos seus pontos de HP.</div>
+                    </div>
+                </button>
+
+                <button onclick="grantWish('ki')" class="p-4 rounded-xl bg-gray-900 border border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-950/40 transition flex items-center gap-3 text-left">
+                    <div class="w-12 h-12 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl font-bold">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-cyan-300">Poder Supremo de Ki</div>
+                        <div class="text-xs text-gray-400">Aumenta o Ki atual ao máximo (10/10).</div>
+                    </div>
+                </button>
+
+                <button onclick="grantWish('draw')" class="p-4 rounded-xl bg-gray-900 border border-amber-500/50 hover:border-amber-400 hover:bg-amber-950/40 transition flex items-center gap-3 text-left">
+                    <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-bold">
+                        <i class="fa-solid fa-cards"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-amber-300">Sabedoria de Batalha</div>
+                        <div class="text-xs text-gray-400">Compre 3 cartas adicionais para sua mão.</div>
+                    </div>
+                </button>
+
+                <button onclick="grantWish('destroy')" class="p-4 rounded-xl bg-gray-900 border border-red-500/50 hover:border-red-400 hover:bg-red-950/40 transition flex items-center gap-3 text-left">
+                    <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-2xl font-bold">
+                        <i class="fa-solid fa-skull"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-red-300">Destruição Celestial</div>
+                        <div class="text-xs text-gray-400">Elimina a carta atual no campo do oponente.</div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="text-xs text-gray-500 italic">As Esferas do Dragão serão espalhadas após o desejo.</div>
+        </div>
+    </div>
+
+    <!-- MODAL REGRAS / COMO JOGAR -->
+    <div id="modal-rules" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-gray-950/90 backdrop-blur">
+        <div class="max-w-xl w-full bg-gray-900 border border-amber-500/50 rounded-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="toggleModal('modal-rules')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <h2 class="font-dbz text-3xl text-amber-400 mb-4">Como Jogar - DBZ Power Battle</h2>
+            
+            <div class="space-y-4 text-sm text-gray-300">
+                <div>
+                    <h3 class="font-bold text-amber-300 text-base mb-1"><i class="fa-solid fa-bolt text-cyan-400 mr-1"></i> 1. Ki e Turnos</h3>
+                    <p>A cada turno, você e o oponente ganham +2 de Ki (até o máximo de 10). O Ki é necessário para invocar cartas e ativar técnicas especiais.</p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-amber-300 text-base mb-1"><i class="fa-solid fa-shield-halved text-red-400 mr-1"></i> 2. Cartas e Estatísticas</h3>
+                    <p>Cada carta tem: <b>Custo de Ki</b>, <b>Ataque (Poder)</b>, <b>Defesa</b> e uma <b>Técnica Especial</b> (Kamehameha, Kaioken, Senzu Bean, etc.).</p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-amber-300 text-base mb-1"><i class="fa-solid fa-burst text-orange-400 mr-1"></i> 3. Combate</h3>
+                    <p>Coloque uma carta em campo. Ao clicar em <b>ATACAR</b>, o dano causado reduz a defesa da carta inimiga. Se a carta inimiga for destruída, o dano sobressalente é tirado diretamente dos pontos de vida (HP) do oponente!</p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-amber-300 text-base mb-1"><i class="fa-solid fa-dragon text-emerald-400 mr-1"></i> 4. Esferas do Dragão</h3>
+                    <p>Você ganha uma Esfera do Dragão a cada rodada vitoriosa ou rodada de combate equilibrado. Ao juntar <b>7 Esferas</b>, invoque Shenlong para receber um desejo especial!</p>
+                </div>
+            </div>
+
+            <button onclick="toggleModal('modal-rules')" class="mt-6 w-full py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-xl uppercase">Entendido!</button>
+        </div>
+    </div>
+
+    <!-- MODAL FIM DE JOGO (VITÓRIA / DERROTA) -->
+    <div id="modal-gameover" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-gray-950/95 backdrop-blur">
+        <div class="max-w-md w-full bg-gray-900 border-2 border-amber-500 rounded-2xl p-6 shadow-2xl text-center">
+            <div id="gameover-icon" class="text-7xl mb-2"></div>
+            <h2 id="gameover-title" class="font-dbz text-5xl tracking-wide mb-2"></h2>
+            <p id="gameover-desc" class="text-gray-300 text-sm mb-6"></p>
+
+            <div class="bg-gray-950 p-4 rounded-xl mb-6 text-left space-y-2 border border-gray-800 text-xs">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Turnos Jogados:</span>
+                    <span id="stat-turns" class="font-bold text-white">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Invocações do Shenlong:</span>
+                    <span id="stat-wishes" class="font-bold text-emerald-400">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Dificuldade:</span>
+                    <span id="stat-diff" class="font-bold text-amber-400">Médio</span>
+                </div>
+            </div>
+
+            <button onclick="returnToMenu()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-gray-950 font-black rounded-xl uppercase text-lg shadow-lg">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPT DO JOGO -->
+    <script>
+        /* ==========================================
+           AUDIO SYNTHESIZER (Web Audio API)
+           ========================================== */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playKiBlast() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playExplosion() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                
+                // Noise buffer
+                const bufferSize = this.ctx.sampleRate * 0.4;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, now);
+                filter.frequency.linearRampToValueAtTime(50, now + 0.4);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start(now);
+            }
+
+            playCardDraw() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+
+            playShenlong() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(450, now + 0.8);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.8);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        // Alternar Áudio
+        document.getElementById('btn-sound').addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            const icon = document.getElementById('sound-icon');
+            if (audio.muted) {
+                icon.className = 'fa-solid fa-volume-xmark';
+            } else {
+                icon.className = 'fa-solid fa-volume-high';
+                audio.playCardDraw();
+            }
+        });
+
+        /* ==========================================
+           BASE DE DADOS DE CARTAS DBZ (Com SVGs embutidos)
+           ========================================== */
+        const CARDS_DATABASE = [
+            {
+                id: 'goku_base',
+                name: 'Goku (Base)',
+                kiCost: 2,
+                atk: 7500,
+                def: 6000,
+                type: 'hero',
+                skillName: 'Kamehameha',
+                skillDesc: '+2000 Ataque neste turno.',
+                color: '#f97316',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="25" fill="#f97316"/><path d="M30 30 Q50 5 70 30" fill="#1e3a8a"/><circle cx="40" cy="35" r="3" fill="#fff"/><circle cx="60" cy="35" r="3" fill="#fff"/><path d="M42 50 Q50 60 58 50" stroke="#fff" stroke-width="2" fill="none"/></svg>`
+            },
+            {
+                id: 'goku_ssj',
+                name: 'Goku Super Saiyajin',
+                kiCost: 4,
+                atk: 14000,
+                def: 11000,
+                type: 'hero',
+                skillName: 'Super Kamehameha',
+                skillDesc: 'Causa 3000 de dano direto ao HP.',
+                color: '#eab308',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="25" fill="#eab308"/><path d="M20 20 Q50 -10 80 20 L70 40 L30 40 Z" fill="#facc15"/><circle cx="40" cy="35" r="3" fill="#000"/><circle cx="60" cy="35" r="3" fill="#000"/></svg>`
+            },
+            {
+                id: 'vegeta_ssj',
+                name: 'Vegeta Super Saiyajin',
+                kiCost: 4,
+                atk: 14500,
+                def: 9500,
+                type: 'hero',
+                skillName: 'Final Flash',
+                skillDesc: 'Ignora 50% da defesa do oponente.',
+                color: '#3b82f6',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="45" r="22" fill="#3b82f6"/><path d="M25 15 Q50 -15 75 15 L65 35 L35 35 Z" fill="#facc15"/><path d="M38 40 L45 42 L38 44" fill="#000"/></svg>`
+            },
+            {
+                id: 'gohan_ssj2',
+                name: 'Gohan SSJ2',
+                kiCost: 5,
+                atk: 18000,
+                def: 12000,
+                type: 'hero',
+                skillName: 'Fúria Oculta',
+                skillDesc: 'Ganha +4000 de Ataque se HP < 50%.',
+                color: '#8b5cf6',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="22" fill="#8b5cf6"/><path d="M20 15 L50 -20 L80 15 Z" fill="#facc15"/><circle cx="40" cy="38" r="3" fill="#fff"/></svg>`
+            },
+            {
+                id: 'piccolo',
+                name: 'Piccolo',
+                kiCost: 3,
+                atk: 9000,
+                def: 10000,
+                type: 'hero',
+                skillName: 'Makankosappo',
+                skillDesc: 'Causa +3000 de dano e restaura 1000 HP.',
+                color: '#10b981',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="24" fill="#10b981"/><path d="M25 25 L35 5 M75 25 L65 5" stroke="#a855f7" stroke-width="4"/><circle cx="40" cy="38" r="3" fill="#000"/></svg>`
+            },
+            {
+                id: 'trunks',
+                name: 'Trunks do Futuro',
+                kiCost: 3,
+                atk: 10500,
+                def: 8500,
+                type: 'hero',
+                skillName: 'Ataque de Espada',
+                skillDesc: 'Aumenta defesa em +2000.',
+                color: '#6366f1',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="22" fill="#6366f1"/><path d="M20 30 Q50 10 80 30" fill="#a855f7"/><rect x="70" y="10" width="4" height="40" fill="#9ca3af" transform="rotate(30)"/></svg>`
+            },
+            {
+                id: 'frieza',
+                name: 'Freeza (Forma Final)',
+                kiCost: 4,
+                atk: 15000,
+                def: 10000,
+                type: 'villain',
+                skillName: 'Death Ball',
+                skillDesc: 'Rouba 1 de Ki do oponente.',
+                color: '#a855f7',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="25" fill="#f3e8ff"/><circle cx="50" cy="25" r="10" fill="#9333ea"/><circle cx="40" cy="42" r="3" fill="#ef4444"/><circle cx="60" cy="42" r="3" fill="#ef4444"/></svg>`
+            },
+            {
+                id: 'cell',
+                name: 'Cell Perfeito',
+                kiCost: 5,
+                atk: 17500,
+                def: 13000,
+                type: 'villain',
+                skillName: 'Regeneração',
+                skillDesc: 'Restaura 3000 de HP ao atacar.',
+                color: '#15803d',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="25" fill="#16a34a"/><path d="M30 15 L50 35 L70 15" fill="#000"/><circle cx="40" cy="40" r="3" fill="#facc15"/><circle cx="60" cy="40" r="3" fill="#facc15"/></svg>`
+            },
+            {
+                id: 'buu',
+                name: 'Majin Buu',
+                kiCost: 5,
+                atk: 16000,
+                def: 15000,
+                type: 'villain',
+                skillName: 'Raio de Chocolate',
+                skillDesc: 'Reduz o ataque do oponente em 3000.',
+                color: '#ec4899',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="42" r="26" fill="#f472b6"/><path d="M50 16 Q55 5 60 16" stroke="#f472b6" stroke-width="4"/><circle cx="40" cy="38" r="3" fill="#000"/><circle cx="60" cy="38" r="3" fill="#000"/></svg>`
+            },
+            {
+                id: 'krillin',
+                name: 'Kuririn',
+                kiCost: 1,
+                atk: 5000,
+                def: 4500,
+                type: 'hero',
+                skillName: 'Kienzan',
+                skillDesc: 'Causa dano direto ignorando toda a defesa.',
+                color: '#f59e0b',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="40" r="22" fill="#fde047"/><circle cx="45" cy="30" r="1" fill="#000"/><circle cx="55" cy="30" r="1" fill="#000"/><circle cx="45" cy="33" r="1" fill="#000"/><circle cx="55" cy="33" r="1" fill="#000"/></svg>`
+            },
+            {
+                id: 'senzu',
+                name: 'Semente dos Deuses',
+                kiCost: 2,
+                atk: 0,
+                def: 3000,
+                type: 'support',
+                skillName: 'Cura Divina',
+                skillDesc: 'Cura +4000 HP do jogador imediatamente.',
+                color: '#22c55e',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><ellipse cx="50" cy="50" rx="20" ry="30" fill="#22c55e" transform="rotate(30 50 50)"/></svg>`
+            },
+            {
+                id: 'kaioken',
+                name: 'Técnica Kaioken',
+                kiCost: 3,
+                atk: 8000,
+                def: 2000,
+                type: 'support',
+                skillName: 'Aumento de Poder',
+                skillDesc: '+6000 de Ataque para o combate atual.',
+                color: '#ef4444',
+                svg: `<svg viewBox="0 0 100 100" class="w-16 h-16"><circle cx="50" cy="50" r="30" fill="#ef4444" opacity="0.6"/><circle cx="50" cy="50" r="18" fill="#f87171"/></svg>`
+            }
+        ];
+
+        /* ==========================================
+           ESTADO GLOBAL DO JOGO
+           ========================================== */
+        let gameState = {
+            difficulty: 'medium', // easy, medium, hard
+            turn: 'player', // player, ai
+            turnCount: 1,
+            wishesUsed: 0,
+            
+            player: {
+                hp: 100,
+                maxHp: 100,
+                ki: 3,
+                maxKi: 10,
+                deck: [],
+                hand: [],
+                fieldCard: null,
+                dragonBalls: 0
+            },
+            
+            ai: {
+                hp: 100,
+                maxHp: 100,
+                ki: 3,
+                maxKi: 10,
+                deck: [],
+                hand: [],
+                fieldCard: null,
+                dragonBalls: 0
+            }
+        };
+
+        /* ==========================================
+           FUNÇÕES DE INICIALIZAÇÃO
+           ========================================== */
+        function setDifficulty(diff) {
+            gameState.difficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.className = "diff-btn py-2 px-3 rounded-lg border border-gray-700 bg-gray-800 text-gray-400 font-bold hover:bg-gray-700 transition";
+            });
+
+            const activeBtn = document.getElementById(`diff-${diff}`);
+            if (diff === 'easy') {
+                activeBtn.className = "diff-btn py-2 px-3 rounded-lg border border-emerald-500 bg-emerald-500 text-gray-950 font-bold transition";
+            } else if (diff === 'medium') {
+                activeBtn.className = "diff-btn py-2 px-3 rounded-lg border border-amber-500 bg-amber-500 text-gray-950 font-bold transition";
+            } else {
+                activeBtn.className = "diff-btn py-2 px-3 rounded-lg border border-red-500 bg-red-500 text-gray-950 font-bold transition";
+            }
+
+            document.getElementById('ai-diff-badge').innerText = diff.toUpperCase();
+        }
+
+        function startGame() {
+            audio.playKiBlast();
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            // Resetar Estado
+            gameState.turnCount = 1;
+            gameState.wishesUsed = 0;
+            gameState.turn = 'player';
+
+            // Configuração base de HP conforme Dificuldade
+            let aiHpMultiplier = gameState.difficulty === 'easy' ? 80 : (gameState.difficulty === 'hard' ? 130 : 100);
+
+            gameState.player.hp = 100;
+            gameState.player.maxHp = 100;
+            gameState.player.ki = 3;
+            gameState.player.fieldCard = null;
+            gameState.player.dragonBalls = 0;
+
+            gameState.ai.hp = aiHpMultiplier;
+            gameState.ai.maxHp = aiHpMultiplier;
+            gameState.ai.ki = 3;
+            gameState.ai.fieldCard = null;
+            gameState.ai.dragonBalls = 0;
+
+            // Criar Decks
+            gameState.player.deck = createDeck();
+            gameState.ai.deck = createDeck();
+
+            // Mão Inicial (4 cartas cada)
+            gameState.player.hand = [];
+            gameState.ai.hand = [];
+
+            for (let i = 0; i < 4; i++) {
+                drawCard('player');
+                drawCard('ai');
+            }
+
+            updateUI();
+        }
+
+        function createDeck() {
+            let deck = [];
+            // Duplica e embaralha as cartas do banco para formar um deck de 16 cartas
+            for (let i = 0; i < 2; i++) {
+                CARDS_DATABASE.forEach(card => {
+                    deck.push({ ...card, uniqueId: Math.random().toString(36).substr(2, 9) });
+                });
+            }
+            return shuffle(deck);
+        }
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        /* ==========================================
+           LÓGICA DE TURNOS E CARTAS
+           ========================================== */
+        function drawCard(target) {
+            if (gameState[target].deck.length > 0 && gameState[target].hand.length < 6) {
+                const card = gameState[target].deck.pop();
+                gameState[target].hand.push(card);
+                if (target === 'player') audio.playCardDraw();
+            }
+        }
+
+        function playCardToField(cardUniqueId) {
+            if (gameState.turn !== 'player') return;
+
+            const cardIndex = gameState.player.hand.findIndex(c => c.uniqueId === cardUniqueId);
+            if (cardIndex === -1) return;
+
+            const card = gameState.player.hand[cardIndex];
+
+            // Verificar se tem Ki suficiente
+            if (gameState.player.ki < card.kiCost) {
+                alert('Ki insuficiente para jogar esta carta!');
+                return;
+            }
+
+            // Consumir Ki
+            gameState.player.ki -= card.kiCost;
+
+            // Tratamento especial para carta de cura/suporte pura
+            if (card.type === 'support' && card.id === 'senzu') {
+                gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + 400);
+                audio.playKiBlast();
+                gameState.player.hand.splice(cardIndex, 1);
+                updateUI();
+                return;
+            }
+
+            // Mover para o campo
+            gameState.player.fieldCard = card;
+            gameState.player.hand.splice(cardIndex, 1);
+            
+            audio.playKiBlast();
+            updateUI();
+        }
+
+        function executeAttack() {
+            if (gameState.turn !== 'player' || !gameState.player.fieldCard) return;
+
+            const playerCard = gameState.player.fieldCard;
+            const aiCard = gameState.ai.fieldCard;
+
+            // Animação de ataque
+            const pZone = document.getElementById('player-battle-zone');
+            pZone.classList.add('card-attacking');
+            setTimeout(() => pZone.classList.remove('card-attacking'), 500);
+
+            audio.playExplosion();
+
+            let attackPower = playerCard.atk;
+
+            // Aplicação da Habilidade da carta
+            if (playerCard.id === 'kaioken') attackPower += 6000;
+            if (playerCard.id === 'goku_base') attackPower += 2000;
+
+            if (aiCard) {
+                // Combate Carta vs Carta
+                let effectiveDef = aiCard.def;
+                if (playerCard.id === 'vegeta_ssj') effectiveDef *= 0.5; // Final flash ignora 50% def
+                if (playerCard.id === 'krillin') effectiveDef = 0; // Kienzan ignora def
+
+                let damageToCard = attackPower;
+                let excessDamage = damageToCard - effectiveDef;
+
+                if (excessDamage > 0) {
+                    // Destruir carta da IA e causar dano no HP da IA
+                    gameState.ai.fieldCard = null;
+                    gameState.ai.hp = Math.max(0, gameState.ai.hp - Math.floor(excessDamage / 200));
+                    
+                    // Ganha Esfera do Dragão em caso de vitória no confronto
+                    addDragonBall('player');
+                } else {
+                    // Carta da IA sobreviveu, reduz defesa dela
+                    aiCard.def -= attackPower;
+                }
+            } else {
+                // Ataque direto no HP da IA
+                let directDamage = Math.floor(attackPower / 150);
+                gameState.ai.hp = Math.max(0, gameState.ai.hp - directDamage);
+                addDragonBall('player');
+            }
+
+            // Habilidades especiais pós-ataque
+            if (playerCard.id === 'goku_ssj') {
+                gameState.ai.hp = Math.max(0, gameState.ai.hp - 20); // Dano direto do Super Kamehameha
+            }
+            if (playerCard.id === 'cell') {
+                gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + 20); // Cura
+            }
+
+            checkWinCondition();
+            updateUI();
+
+            // Desabilitar ataque após usar
+            document.getElementById('btn-attack').disabled = true;
+        }
+
+        function endTurn() {
+            if (gameState.turn === 'player') {
+                gameState.turn = 'ai';
+                document.getElementById('turn-banner').innerText = "Turno da IA";
+                document.getElementById('turn-banner').className = "absolute -top-3 z-10 px-6 py-1 rounded-full bg-gradient-to-r from-red-600 to-rose-700 text-white font-black text-xs uppercase tracking-widest shadow-lg";
+
+                // Regenerar Ki e comprar carta
+                gameState.ai.ki = Math.min(gameState.ai.maxKi, gameState.ai.ki + 2);
+                drawCard('ai');
+
+                updateUI();
+                setTimeout(playAITurn, 1200);
+            }
+        }
+
+        /* ==========================================
+           IA DO OPONENTE
+           ========================================== */
+        function playAITurn() {
+            if (gameState.turn !== 'ai') return;
+
+            // IA escolhe jogar carta se não tiver uma em campo ou se puder substituir por uma melhor
+            if (!gameState.ai.fieldCard && gameState.ai.hand.length > 0) {
+                // Filtrar cartas que pode pagar
+                const playableCards = gameState.ai.hand.filter(c => c.kiCost <= gameState.ai.ki);
+                
+                if (playableCards.length > 0) {
+                    // Escolhe carta com maior ataque se for difícil, ou aleatória se for fácil
+                    let selectedCard;
+                    if (gameState.difficulty === 'hard') {
+                        selectedCard = playableCards.reduce((prev, curr) => (prev.atk > curr.atk) ? prev : curr);
+                    } else {
+                        selectedCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+                    }
+
+                    const cardIndex = gameState.ai.hand.indexOf(selectedCard);
+                    gameState.ai.ki -= selectedCard.kiCost;
+                    gameState.ai.fieldCard = selectedCard;
+                    gameState.ai.hand.splice(cardIndex, 1);
+
+                    audio.playKiBlast();
+                    updateUI();
+                }
+            }
+
+            // Ataque da IA se tiver carta em campo
+            setTimeout(() => {
+                if (gameState.ai.fieldCard) {
+                    executeAIAttack();
+                }
+
+                // Finalizar turno da IA
+                gameState.turn = 'player';
+                gameState.turnCount++;
+                gameState.player.ki = Math.min(gameState.player.maxKi, gameState.player.ki + 2);
+                drawCard('player');
+
+                document.getElementById('turn-banner').innerText = "Seu Turno";
+                document.getElementById('turn-banner').className = "absolute -top-3 z-10 px-6 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-black text-xs uppercase tracking-widest shadow-lg";
+
+                checkWinCondition();
+                updateUI();
+            }, 1000);
+        }
+
+        function executeAIAttack() {
+            const aiCard = gameState.ai.fieldCard;
+            const playerCard = gameState.player.fieldCard;
+
+            // Animação Ataque IA
+            const aiZone = document.getElementById('ai-battle-zone');
+            aiZone.classList.add('card-attacking');
+            setTimeout(() => aiZone.classList.remove('card-attacking'), 500);
+
+            audio.playExplosion();
+
+            let attackPower = aiCard.atk;
+
+            if (playerCard) {
+                let damageToCard = attackPower;
+                let excessDamage = damageToCard - playerCard.def;
+
+                if (excessDamage > 0) {
+                    gameState.player.fieldCard = null;
+                    gameState.player.hp = Math.max(0, gameState.player.hp - Math.floor(excessDamage / 200));
+                    addDragonBall('ai');
+                } else {
+                    playerCard.def -= attackPower;
+                }
+            } else {
+                let directDamage = Math.floor(attackPower / 150);
+                gameState.player.hp = Math.max(0, gameState.player.hp - directDamage);
+                addDragonBall('ai');
+            }
+        }
+
+        /* ==========================================
+           SISTEMA DAS ESFERAS DO DRAGÃO & SHENLONG
+           ========================================== */
+        function addDragonBall(target) {
+            if (gameState[target].dragonBalls < 7) {
+                gameState[target].dragonBalls++;
+                if (target === 'player' && gameState.player.dragonBalls === 7) {
+                    document.getElementById('btn-shenlong').disabled = false;
+                    document.getElementById('btn-shenlong').classList.remove('opacity-40', 'cursor-not-allowed');
+                    document.getElementById('btn-shenlong').classList.add('ki-aura');
+                }
+            }
+        }
+
+        function openShenlongModal() {
+            if (gameState.player.dragonBalls >= 7) {
+                audio.playShenlong();
+                document.getElementById('modal-shenlong').classList.remove('hidden');
+            }
+        }
+
+        function grantWish(wishType) {
+            gameState.wishesUsed++;
+            
+            if (wishType === 'heal') {
+                gameState.player.hp = gameState.player.maxHp;
+            } else if (wishType === 'ki') {
+                gameState.player.ki = gameState.player.maxKi;
+            } else if (wishType === 'draw') {
+                drawCard('player');
+                drawCard('player');
+                drawCard('player');
+            } else if (wishType === 'destroy') {
+                gameState.ai.fieldCard = null;
+            }
+
+            // Consome esferas
+            gameState.player.dragonBalls = 0;
+            document.getElementById('btn-shenlong').disabled = true;
+            document.getElementById('btn-shenlong').classList.add('opacity-40', 'cursor-not-allowed');
+            document.getElementById('btn-shenlong').classList.remove('ki-aura');
+
+            document.getElementById('modal-shenlong').classList.add('hidden');
+            audio.playExplosion();
+            updateUI();
+        }
+
+        /* ==========================================
+           ATUALIZAÇÃO DA INTERFACE (UI RENDER)
+           ========================================== */
+        function updateUI() {
+            // HP e Ki Jogador
+            const pHpPct = Math.max(0, (gameState.player.hp / gameState.player.maxHp) * 100);
+            document.getElementById('player-hp-bar').style.width = `${pHpPct}%`;
+            document.getElementById('player-hp-text').innerText = `${gameState.player.hp} / ${gameState.player.maxHp}`;
+            
+            const pKiPct = (gameState.player.ki / gameState.player.maxKi) * 100;
+            document.getElementById('player-ki-bar').style.width = `${pKiPct}%`;
+            document.getElementById('player-ki-text').innerText = `${gameState.player.ki} / ${gameState.player.maxKi}`;
+
+            // HP e Ki IA
+            const aiHpPct = Math.max(0, (gameState.ai.hp / gameState.ai.maxHp) * 100);
+            document.getElementById('ai-hp-bar').style.width = `${aiHpPct}%`;
+            document.getElementById('ai-hp-text').innerText = `${gameState.ai.hp} / ${gameState.ai.maxHp}`;
+
+            const aiKiPct = (gameState.ai.ki / gameState.ai.maxKi) * 100;
+            document.getElementById('ai-ki-bar').style.width = `${aiKiPct}%`;
+            document.getElementById('ai-ki-text').innerText = `${gameState.ai.ki} / ${gameState.ai.maxKi}`;
+
+            // Contagem Decks
+            document.getElementById('player-deck-count').innerText = gameState.player.deck.length;
+            document.getElementById('ai-deck-count').innerText = gameState.ai.deck.length;
+
+            // Renderizar Esferas do Dragão
+            renderDragonBalls('player-dragon-balls', gameState.player.dragonBalls);
+            renderDragonBalls('ai-dragon-balls', gameState.ai.dragonBalls);
+            document.getElementById('db-count-text').innerText = `${gameState.player.dragonBalls} / 7`;
+
+            // Renderizar Mão do Jogador
+            const playerHandContainer = document.getElementById('player-hand');
+            playerHandContainer.innerHTML = '';
+            gameState.player.hand.forEach(card => {
+                playerHandContainer.appendChild(createCardElement(card, true));
+            });
+
+            // Renderizar Mão da IA (Oculta)
+            const aiHandContainer = document.getElementById('ai-hand');
+            aiHandContainer.innerHTML = '';
+            gameState.ai.hand.forEach(() => {
+                const backCard = document.createElement('div');
+                backCard.className = "w-12 h-16 bg-gradient-to-br from-red-900 to-gray-900 border border-red-500/40 rounded-lg flex items-center justify-center shadow";
+                backCard.innerHTML = `<i class="fa-solid fa-dragon text-amber-500/50 text-xs"></i>`;
+                aiHandContainer.appendChild(backCard);
+            });
+
+            // Renderizar Campo de Batalha Jogador
+            const pBattleZone = document.getElementById('player-battle-zone');
+            if (gameState.player.fieldCard) {
+                pBattleZone.innerHTML = '';
+                pBattleZone.appendChild(createCardElement(gameState.player.fieldCard, false));
+                if (gameState.turn === 'player') {
+                    document.getElementById('btn-attack').disabled = false;
+                }
+            } else {
+                pBattleZone.innerHTML = `<div class="text-gray-600 text-xs italic">Nenhuma carta em campo</div>`;
+                document.getElementById('btn-attack').disabled = true;
+            }
+
+            // Renderizar Campo de Batalha IA
+            const aiBattleZone = document.getElementById('ai-battle-zone');
+            if (gameState.ai.fieldCard) {
+                aiBattleZone.innerHTML = '';
+                aiBattleZone.appendChild(createCardElement(gameState.ai.fieldCard, false));
+            } else {
+                aiBattleZone.innerHTML = `<div class="text-gray-600 text-xs italic">Nenhuma carta em campo</div>`;
+            }
+        }
+
+        function renderDragonBalls(containerId, count) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for (let i = 0; i < 7; i++) {
+                const ball = document.createElement('div');
+                if (i < count) {
+                    ball.className = "w-4 h-4 rounded-full dragon-ball";
+                } else {
+                    ball.className = "w-4 h-4 rounded-full bg-gray-800 border border-gray-700 opacity-40";
+                }
+                container.appendChild(ball);
+            }
+        }
+
+        function createCardElement(card, inHand) {
+            const cardEl = document.createElement('div');
+            cardEl.className = `dbz-card relative w-28 md:w-32 bg-gray-900 border-2 rounded-xl p-2 flex flex-col justify-between select-none shrink-0 shadow-lg`;
+            cardEl.style.borderColor = card.color;
+
+            if (inHand) {
+                cardEl.onclick = () => playCardToField(card.uniqueId);
+            }
+
+            cardEl.innerHTML = `
+                <!-- Badge Custo Ki -->
+                <div class="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-cyan-500 text-gray-950 font-black text-xs flex items-center justify-center border border-white shadow">
+                    ${card.kiCost}
+                </div>
+
+                <!-- Nome da Carta -->
+                <div class="text-[10px] font-bold text-center text-gray-100 truncate mt-1">
+                    ${card.name}
+                </div>
+
+                <!-- Ilustração SVG -->
+                <div class="my-1 flex justify-center items-center bg-gray-950/60 rounded-lg p-1 border border-gray-800">
+                    ${card.svg}
+                </div>
+
+                <!-- Status Atq & Def -->
+                <div class="grid grid-cols-2 gap-1 text-[10px] font-extrabold text-center">
+                    <div class="bg-red-950/80 text-red-400 rounded py-0.5 border border-red-900/40">
+                        <i class="fa-solid fa-fire"></i> ${card.atk}
+                    </div>
+                    <div class="bg-blue-950/80 text-blue-400 rounded py-0.5 border border-blue-900/40">
+                        <i class="fa-solid fa-shield"></i> ${card.def}
+                    </div>
+                </div>
+
+                <!-- Tooltip da Técnica Especial -->
+                <div class="card-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 p-2 bg-gray-950 border border-amber-500 rounded-lg text-[10px] text-gray-200 z-30 pointer-events-none shadow-2xl">
+                    <div class="font-bold text-amber-400 mb-0.5">${card.skillName}</div>
+                    <div>${card.skillDesc}</div>
+                </div>
+            `;
+
+            return cardEl;
+        }
+
+        /* ==========================================
+           FIM DE JOGO & MODAIS DE UTILIDADE
+           ========================================== */
+        function checkWinCondition() {
+            if (gameState.ai.hp <= 0) {
+                showGameOver(true);
+            } else if (gameState.player.hp <= 0) {
+                showGameOver(false);
+            }
+        }
+
+        function showGameOver(isVictory) {
+            const modal = document.getElementById('modal-gameover');
+            const icon = document.getElementById('gameover-icon');
+            const title = document.getElementById('gameover-title');
+            const desc = document.getElementById('gameover-desc');
+
+            if (isVictory) {
+                icon.innerHTML = `<i class="fa-solid fa-trophy text-amber-400 animate-bounce"></i>`;
+                title.innerText = "VITÓRIA!";
+                title.className = "font-dbz text-5xl text-amber-400 tracking-wide mb-2";
+                desc.innerText = "Você defendeu o universo e derrotou seu oponente em uma batalha épica!";
+                audio.playShenlong();
+            } else {
+                icon.innerHTML = `<i class="fa-solid fa-skull-crossbones text-red-500"></i>`;
+                title.innerText = "DERROTA!";
+                title.className = "font-dbz text-5xl text-red-500 tracking-wide mb-2";
+                desc.innerText = "Seu HP chegou a zero! Treine mais no Planeta do Sr. Kaioh e tente novamente.";
+                audio.playExplosion();
+            }
+
+            document.getElementById('stat-turns').innerText = gameState.turnCount;
+            document.getElementById('stat-wishes').innerText = gameState.wishesUsed;
+            document.getElementById('stat-diff').innerText = gameState.difficulty.toUpperCase();
+
+            modal.classList.remove('hidden');
+        }
+
+        function returnToMenu() {
+            document.getElementById('modal-gameover').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-menu').classList.remove('hidden');
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
